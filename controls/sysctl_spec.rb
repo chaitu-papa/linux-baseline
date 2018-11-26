@@ -385,27 +385,3 @@ control 'sysctl-32' do
   end
 end
 
-control 'sysctl-33' do
-  impact 1.0
-  title 'CPU No execution Flag or Kernel ExecShield'
-  desc 'Kernel features and CPU flags provide a protection against buffer overflows. The CPU NX Flag and the kernel parameter exec-shield prevents code execution on a per memory page basis. If the CPU supports the NX-Flag then this should be used instead of the kernel parameter exec-shield.'
-  only_if { !container_execution }
-
-  # parse for cpu flags
-  flags = parse_config_file('/proc/cpuinfo', assignment_regex: /^([^:]*?)\s+:\s+(.*?)$/).flags
-  flags ||= ''
-  flags = flags.split(' ')
-
-  describe '/proc/cpuinfo' do
-    it 'Flags should include NX' do
-      expect(flags).to include('nx')
-    end
-  end
-
-  unless flags.include?('nx')
-    # if no nx flag is present, we require exec-shield
-    describe kernel_parameter('kernel.exec-shield') do
-      its(:value) { should eq 1 }
-    end
-  end
-end

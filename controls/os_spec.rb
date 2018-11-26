@@ -153,16 +153,6 @@ control 'os-05b' do
   only_if { os.redhat? }
 end
 
-control 'os-06' do
-  impact 1.0
-  title 'Check for SUID/ SGID blacklist'
-  desc 'Find blacklisted SUID and SGID files to ensure that no rogue SUID and SGID files have been introduced into the system'
-
-  describe suid_check(blacklist) do
-    its('diff') { should be_empty }
-  end
-end
-
 control 'os-07' do
   impact 1.0
   title 'Unique uid and gid'
@@ -175,15 +165,6 @@ control 'os-07' do
   end
 end
 
-control 'os-08' do
-  impact 1.0
-  title 'Entropy'
-  desc 'Check system has enough entropy - greater than 1000'
-  describe file('/proc/sys/kernel/random/entropy_avail').content.to_i do
-    it { should >= 1000 }
-  end
-end
-
 control 'os-09' do
   impact 1.0
   title 'Check for .rhosts and .netrc file'
@@ -192,28 +173,6 @@ control 'os-09' do
   out = output.stdout.split(/\r?\n/)
   describe out do
     it { should be_empty }
-  end
-end
-
-control 'os-10' do
-  impact 1.0
-  title 'CIS: Disable unused filesystems'
-  desc '1.1.1 Ensure mounting of cramfs, freevxfs, jffs2, hfs, hfsplus, squashfs, udf, FAT'
-  only_if { !container_execution }
-  efi_dir = inspec.file('/sys/firmware/efi')
-  describe file('/etc/modprobe.d/dev-sec.conf') do
-    its(:content) { should match 'install cramfs /bin/true' }
-    its(:content) { should match 'install freevxfs /bin/true' }
-    its(:content) { should match 'install jffs2 /bin/true' }
-    its(:content) { should match 'install hfs /bin/true' }
-    its(:content) { should match 'install hfsplus /bin/true' }
-    its(:content) { should match 'install squashfs /bin/true' }
-    its(:content) { should match 'install udf /bin/true' }
-    # if efi is active, do not disable vfat. otherwise the system
-    # won't boot anymore
-    unless efi_dir.exist?
-      its(:content) { should match 'install vfat /bin/true' }
-    end
   end
 end
 
